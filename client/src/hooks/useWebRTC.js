@@ -17,6 +17,8 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
   const receivedFileInfoRef = useRef(null)
   const iceCandidatesBufferRef = useRef([])
   const isSettingRemoteDescRef = useRef(false)
+  const isChannelClosingIntentionallyRef = useRef(false)
+  const reconnectTimeoutRef = useRef(null)
 
   const iceServers = {
     iceServers: [
@@ -123,6 +125,13 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
 
     return () => {
       console.log(' Limpiando conexión...')
+      isChannelClosingIntentionallyRef.current = true
+      
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
+      }
+      
       if (dataChannelRef.current) {
         dataChannelRef.current.close()
         dataChannelRef.current = null
@@ -140,6 +149,29 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
       receivedFileInfoRef.current = null
     }
   }, [roomId, isHost])
+
+  // Detectar cuando la página vuelve a ser visible (útil para móviles)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Cuando la página vuelve a ser visible, verificar el estado de la conexión
+        setTimeout(() => {
+          if (peerConnectionRef.current && 
+              peerConnectionRef.current.connectionState === 'connected' &&
+              (!dataChannelRef.current || dataChannelRef.current.readyState !== 'open')) {
+            console.log(' Página visible. Canal cerrado pero conexión activa. El sistema intentará reconectar automáticamente.')
+            // El sistema de reconexión en onclose se encargará de recrear el canal
+          }
+        }, 500)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
 
   const initializePeerConnection = (isHostPeer) => {
     console.log('Inicializando conexión peer...', { isHostPeer })
@@ -218,11 +250,13 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
 
   const setupDataChannel = (channel) => {
     dataChannelRef.current = channel
+    isChannelClosingIntentionallyRef.current = false
 
     channel.onopen = () => {
       console.log(' Canal de datos abierto')
       setStatus('Conexión establecida. Listo para transferir archivos.')
       setIsConnected(true)
+      setError(null) // Limpiar errores previos
       if (onConnectionChange) {
         onConnectionChange(true)
       }
@@ -230,16 +264,80 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
 
     channel.onclose = () => {
       console.log(' Canal de datos cerrado')
-      setIsConnected(false)
-      setStatus('Conexión cerrada')
-      if (onConnectionChange) {
-        onConnectionChange(false)
+      
+      // Si el cierre fue intencional (limpieza), no intentar reconectar
+      if (isChannelClosingIntentionallyRef.current) {
+        setIsConnected(false)
+        setStatus('Conexión cerrada')
+        if (onConnectionChange) {
+          onConnectionChange(false)
+        }
+        return
       }
+
+      // Si el cierre fue inesperado, intentar reconectar después de un breve delay
+      setIsConnected(false)
+      setStatus('Conexión perdida. Intentando reconectar...')
+      
+      // Limpiar timeout anterior si existe
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+      }
+
+      // Intentar reconectar después de 1 segundo
+      reconnectTimeoutRef.current = setTimeout(() => {
+        if (peerConnectionRef.current && 
+            peerConnectionRef.current.connectionState !== 'closed' &&
+            peerConnectionRef.current.connectionState !== 'disconnected') {
+          console.log(' Intentando recrear canal de datos...')
+          const connectionState = peerConnectionRef.current.connectionState
+          const iceState = peerConnectionRef.current.iceConnectionState
+          
+          // Solo intentar recrear si la conexión peer sigue activa
+          if ((connectionState === 'connected' || connectionState === 'connecting') &&
+              (iceState === 'connected' || iceState === 'completed' || iceState === 'checking')) {
+            if (isHost) {
+              // Recrear el canal y enviar nueva oferta
+              try {
+                createDataChannel()
+                createOffer()
+              } catch (error) {
+                console.error(' Error al recrear canal:', error)
+                setError('Error al reconectar. Intenta refrescar la página.')
+              }
+            } else {
+              // Si no es host, solo esperar a que el host recree el canal
+              setStatus('Esperando a que se restaure la conexión...')
+            }
+          } else {
+            console.log(' Conexión peer no está en estado válido para reconectar')
+            setError('Conexión perdida. Por favor, recarga la página.')
+          }
+        }
+      }, 1000)
     }
 
-    channel.onerror = (error) => {
-      console.error(' Error en canal de datos:', error)
-      setError('Error en la conexión del canal')
+    channel.onerror = (errorEvent) => {
+      console.error(' Error en canal de datos:', errorEvent)
+      
+      // Verificar si el error es recuperable
+      const error = errorEvent.error
+      if (error) {
+        const errorMessage = error.message || error.toString()
+        
+        // Errores relacionados con cierre temporal (como cuando se abre el selector de archivos)
+        if (errorMessage.includes('User-Initiated Abort') || 
+            errorMessage.includes('Close called') ||
+            errorMessage.includes('OperationError')) {
+          console.warn(' Error temporal en canal (posiblemente por cambio de contexto). Esperando...')
+          // No establecer error fatal, solo loguear
+          // El onclose se encargará de la reconexión si es necesario
+          return
+        }
+      }
+      
+      // Para otros errores, mostrar mensaje pero no cerrar la conexión inmediatamente
+      setError('Error en la conexión del canal. Intentando recuperar...')
     }
 
     channel.onmessage = async (event) => {
