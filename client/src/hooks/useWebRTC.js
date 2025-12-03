@@ -399,6 +399,49 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
     }
   }
 
+  // Función auxiliar para esperar a que el buffer se vacíe
+  const waitForBuffer = (channel, maxBufferSize = 256 * 1024) => {
+    return new Promise((resolve) => {
+      // Si el canal no está abierto, no esperar
+      if (channel.readyState !== 'open') {
+        resolve()
+        return
+      }
+
+      if (channel.bufferedAmount <= maxBufferSize) {
+        resolve()
+        return
+      }
+
+      const checkBuffer = () => {
+        if (channel.readyState !== 'open' || channel.bufferedAmount <= maxBufferSize) {
+          channel.removeEventListener('bufferedamountlow', checkBuffer)
+          resolve()
+        }
+      }
+
+      // Usar el evento bufferedamountlow si está disponible
+      if (channel.bufferedAmountLowThreshold !== undefined) {
+        channel.bufferedAmountLowThreshold = maxBufferSize
+        channel.addEventListener('bufferedamountlow', checkBuffer)
+      } else {
+        // Fallback: polling cada 50ms
+        const interval = setInterval(() => {
+          if (channel.readyState !== 'open' || channel.bufferedAmount <= maxBufferSize) {
+            clearInterval(interval)
+            resolve()
+          }
+        }, 50)
+
+        // Timeout de seguridad: resolver después de 5 segundos máximo
+        setTimeout(() => {
+          clearInterval(interval)
+          resolve()
+        }, 5000)
+      }
+    })
+  }
+
   const sendFile = async (file) => {
     if (!dataChannelRef.current) {
       setError('El canal de datos no está disponible')
@@ -414,6 +457,7 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
       setStatus('Preparando archivo para envío...')
       const chunkSize = 16 * 1024 // 16KB chunks
       const totalChunks = Math.ceil(file.size / chunkSize)
+      const maxBufferSize = 256 * 1024 // 256KB - esperar si el buffer supera esto
 
       // Enviar información del archivo
       dataChannelRef.current.send(JSON.stringify({
@@ -457,21 +501,40 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
       setStatus(`Enviando: ${file.name}...`)
       setTransferProgress(0)
 
-      // Enviar chunks
+      // Enviar chunks con control de flujo
       for (let i = 0; i < totalChunks; i++) {
+        // Esperar a que el buffer se vacíe si está lleno
+        await waitForBuffer(dataChannelRef.current, maxBufferSize)
+
         const start = i * chunkSize
         const end = Math.min(start + chunkSize, file.size)
         const chunk = await file.slice(start, end).arrayBuffer()
         const uint8Array = new Uint8Array(chunk)
 
-        dataChannelRef.current.send(JSON.stringify({
-          type: 'file-chunk',
-          data: Array.from(uint8Array)
-        }))
+        try {
+          dataChannelRef.current.send(JSON.stringify({
+            type: 'file-chunk',
+            data: Array.from(uint8Array)
+          }))
+        } catch (error) {
+          // Si aún falla, esperar un poco más y reintentar
+          if (error.message.includes('send queue is full')) {
+            await waitForBuffer(dataChannelRef.current, maxBufferSize / 2)
+            dataChannelRef.current.send(JSON.stringify({
+              type: 'file-chunk',
+              data: Array.from(uint8Array)
+            }))
+          } else {
+            throw error
+          }
+        }
 
         const progress = ((i + 1) / totalChunks) * 100
         setTransferProgress(progress)
       }
+
+      // Esperar a que el buffer se vacíe antes de enviar el mensaje final
+      await waitForBuffer(dataChannelRef.current, maxBufferSize)
 
       // Confirmar envío completo
       dataChannelRef.current.send(JSON.stringify({
