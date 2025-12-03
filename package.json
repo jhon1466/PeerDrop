@@ -1,0 +1,23 @@
+{
+  "name": "peerdrop",
+  "version": "1.0.0",
+  "description": "Transferencia de archivos P2P directa entre navegadores",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && nodemon index.js",
+    "dev:client": "cd client && npm run dev",
+    "build": "cd client && npm install && npm run build",
+    "vercel-build": "cd client && npm install && npm run build",
+    "start": "cd server && node index.js"
+  },
+  "keywords": ["p2p", "webrtc", "file-transfer"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.2"
+  },
+  "dependencies": {}
+}
+

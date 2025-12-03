@@ -1,0 +1,708 @@
+.file-transfer-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+.file-transfer-card {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  margin-bottom: 24px;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.transfer-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.transfer-title {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.transfer-subtitle {
+  color: #a0a0a0;
+  font-size: 16px;
+}
+
+.connection-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Selector de modo */
+.mode-selector {
+  display: flex;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.mode-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  color: #a0a0a0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.mode-button.active {
+  background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%);
+  color: white;
+  border-color: rgba(147, 51, 234, 0.3);
+}
+
+.mode-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Sección de input de sala */
+.room-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.room-id-display-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(147, 51, 234, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.room-id-display-input-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #9333ea;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+  outline: none;
+  min-width: 0;
+}
+
+.room-id-display-input-field::placeholder {
+  color: rgba(147, 51, 234, 0.5);
+  font-size: 18px;
+}
+
+.refresh-button {
+  background: rgba(147, 51, 234, 0.2);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  border-radius: 8px;
+  padding: 8px;
+  color: #9333ea;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refresh-button:hover {
+  background: rgba(147, 51, 234, 0.3);
+  transform: rotate(180deg);
+}
+
+.room-section,
+.join-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.room-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.room-id-display-joined {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #60a5fa;
+}
+
+.room-id-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.room-id-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(147, 51, 234, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #9333ea;
+}
+
+.room-id-text {
+  font-family: 'Courier New', monospace;
+}
+
+.copy-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.copy-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(147, 51, 234, 0.4);
+}
+
+.copy-button.copied {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.room-instructions {
+  text-align: center;
+  color: #a0a0a0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.room-id-input-container {
+  display: flex;
+  gap: 12px;
+}
+
+.room-id-input {
+  flex: 1;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+  transition: border-color 0.2s;
+}
+
+.room-id-input:focus {
+  outline: none;
+  border-color: #9333ea;
+}
+
+.join-button {
+  padding: 14px 32px;
+  background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+
+.join-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(147, 51, 234, 0.4);
+}
+
+.join-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.copy-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.copy-button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.status-message {
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  color: #60a5fa;
+  text-align: center;
+  font-size: 14px;
+}
+
+.error-message {
+  padding: 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  color: #f87171;
+  text-align: center;
+  font-size: 14px;
+}
+
+.transfer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  font-size: 14px;
+  color: #a0a0a0;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.connected {
+  background: #10b981;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.file-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.file-upload-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px dashed rgba(147, 51, 234, 0.3);
+  border-radius: 16px;
+  color: #9333ea;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.file-upload-button:hover {
+  background: rgba(147, 51, 234, 0.1);
+  border-color: rgba(147, 51, 234, 0.5);
+}
+
+.file-info {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.file-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.file-size {
+  font-size: 14px;
+  color: #a0a0a0;
+}
+
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9333ea 0%, #6366f1 100%);
+  transition: width 0.3s ease;
+  border-radius: 6px;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 14px;
+  color: #a0a0a0;
+  font-weight: 600;
+}
+
+.file-received {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  color: #10b981;
+}
+
+.file-received svg {
+  flex-shrink: 0;
+}
+
+.room-info-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #a0a0a0;
+}
+
+.copy-small-button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #a0a0a0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-small-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .file-transfer-container {
+    padding: 12px;
+  }
+
+  .file-transfer-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .back-button {
+    padding: 8px 12px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .transfer-header {
+    margin-bottom: 24px;
+  }
+
+  .transfer-title {
+    font-size: 28px;
+  }
+
+  .transfer-subtitle {
+    font-size: 14px;
+  }
+
+  .mode-selector {
+    gap: 8px;
+    padding: 6px;
+  }
+
+  .mode-button {
+    padding: 10px 12px;
+    font-size: 13px;
+    gap: 6px;
+  }
+
+  .mode-button svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .room-id-display-input {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .room-id-display-input-field {
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .room-id-display-input-field::placeholder {
+    font-size: 14px;
+  }
+
+  .refresh-button {
+    padding: 6px;
+  }
+
+  .refresh-button svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .room-id-display,
+  .room-id-display-joined {
+    padding: 16px;
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+
+  .room-id-input-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .room-id-input {
+    padding: 12px 16px;
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+
+  .join-button {
+    width: 100%;
+    padding: 12px 24px;
+    font-size: 15px;
+  }
+
+  .copy-button {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .room-instructions {
+    font-size: 13px;
+  }
+
+  .file-upload-button {
+    padding: 30px 20px;
+    gap: 10px;
+  }
+
+  .file-upload-button svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .file-upload-button span {
+    font-size: 14px;
+  }
+
+  .connection-section {
+    gap: 16px;
+  }
+
+  .transfer-section {
+    gap: 16px;
+  }
+
+  .status-indicator {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .file-info {
+    padding: 12px;
+  }
+
+  .file-name {
+    font-size: 14px;
+  }
+
+  .file-size {
+    font-size: 12px;
+  }
+
+  .room-info-footer {
+    padding: 10px;
+    font-size: 11px;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .file-transfer-container {
+    padding: 8px;
+  }
+
+  .file-transfer-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .transfer-title {
+    font-size: 24px;
+  }
+
+  .transfer-subtitle {
+    font-size: 13px;
+  }
+
+  .mode-button {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .room-id-display-input-field {
+    font-size: 16px;
+  }
+
+  .room-id-display,
+  .room-id-display-joined {
+    padding: 12px;
+    font-size: 18px;
+  }
+
+  .room-id-input {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+
+  .copy-button {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .file-upload-button {
+    padding: 24px 16px;
+  }
+
+  .file-upload-button svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .file-upload-button span {
+    font-size: 13px;
+  }
+
+  .status-message,
+  .error-message {
+    padding: 12px;
+    font-size: 13px;
+  }
+}
+
+/* Mejoras para pantallas táctiles */
+@media (hover: none) and (pointer: coarse) {
+  .mode-button,
+  .copy-button,
+  .join-button,
+  .back-button,
+  .file-upload-button {
+    min-height: 44px; /* Tamaño mínimo recomendado para toques */
+  }
+
+  .refresh-button,
+  .copy-small-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+

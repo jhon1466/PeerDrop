@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: proyecto-p2p-server
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3001
+    plan: free
