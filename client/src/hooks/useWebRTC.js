@@ -19,6 +19,8 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
   const isSettingRemoteDescRef = useRef(false)
   const isChannelClosingIntentionallyRef = useRef(false)
   const reconnectTimeoutRef = useRef(null)
+  const isTemporaryErrorRef = useRef(false)
+  const channelCheckTimeoutRef = useRef(null)
 
   const iceServers = {
     iceServers: [
@@ -130,6 +132,11 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
         reconnectTimeoutRef.current = null
+      }
+      
+      if (channelCheckTimeoutRef.current) {
+        clearTimeout(channelCheckTimeoutRef.current)
+        channelCheckTimeoutRef.current = null
       }
       
       if (dataChannelRef.current) {
@@ -251,6 +258,13 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
   const setupDataChannel = (channel) => {
     dataChannelRef.current = channel
     isChannelClosingIntentionallyRef.current = false
+    isTemporaryErrorRef.current = false
+    
+    // Limpiar timeouts anteriores si existen
+    if (channelCheckTimeoutRef.current) {
+      clearTimeout(channelCheckTimeoutRef.current)
+      channelCheckTimeoutRef.current = null
+    }
 
     channel.onopen = () => {
       console.log(' Canal de datos abierto')
@@ -275,7 +289,46 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
         return
       }
 
+      // Si fue un error temporal, esperar un poco antes de intentar reconectar
+      // para dar tiempo a que el navegador termine de procesar el cambio de contexto
+      if (isTemporaryErrorRef.current) {
+        console.log(' Error temporal detectado. Esperando antes de reconectar...')
+        isTemporaryErrorRef.current = false
+        
+        // Esperar un momento para que el navegador termine de procesar el cambio de contexto
+        // Luego intentar reconectar si la conexión peer sigue activa
+        channelCheckTimeoutRef.current = setTimeout(() => {
+          // Verificar si la conexión peer sigue activa antes de intentar reconectar
+          if (peerConnectionRef.current && 
+              peerConnectionRef.current.connectionState !== 'closed' &&
+              peerConnectionRef.current.connectionState !== 'disconnected') {
+            const connectionState = peerConnectionRef.current.connectionState
+            const iceState = peerConnectionRef.current.iceConnectionState
+            
+            // Si la conexión peer sigue activa, intentar recrear el canal
+            if ((connectionState === 'connected' || connectionState === 'connecting') &&
+                (iceState === 'connected' || iceState === 'completed' || iceState === 'checking')) {
+              console.log(' Conexión peer activa. Recreando canal de datos...')
+              attemptReconnect()
+            } else {
+              console.log(' Conexión peer no está en estado válido')
+              setIsConnected(false)
+              setStatus('Conexión perdida')
+            }
+          } else {
+            console.log(' Conexión peer cerrada')
+            setIsConnected(false)
+            setStatus('Conexión perdida')
+          }
+        }, 1000) // Esperar 1 segundo para que el navegador termine de procesar
+        return
+      }
+
       // Si el cierre fue inesperado, intentar reconectar después de un breve delay
+      attemptReconnect()
+    }
+
+    const attemptReconnect = () => {
       setIsConnected(false)
       setStatus('Conexión perdida. Intentando reconectar...')
       
@@ -330,8 +383,10 @@ export function useWebRTC(roomId, isHost, onFileReceived, onConnectionChange) {
             errorMessage.includes('Close called') ||
             errorMessage.includes('OperationError')) {
           console.warn(' Error temporal en canal (posiblemente por cambio de contexto). Esperando...')
+          // Marcar como error temporal para que onclose lo maneje apropiadamente
+          isTemporaryErrorRef.current = true
           // No establecer error fatal, solo loguear
-          // El onclose se encargará de la reconexión si es necesario
+          // El onclose se encargará de verificar si realmente se cerró o se recuperó
           return
         }
       }
